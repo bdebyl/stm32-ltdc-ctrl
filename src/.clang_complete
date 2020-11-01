@@ -1,0 +1,2 @@
+-I../libopencm3/include
+-DSTM32F4

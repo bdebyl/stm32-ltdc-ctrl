@@ -1,0 +1,7 @@
+doc/
+*.bin
+*.elf
+*.d
+*.map
+*.o
+main.size
