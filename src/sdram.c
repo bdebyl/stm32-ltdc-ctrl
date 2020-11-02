@@ -1,22 +1,31 @@
-// Copyright 2020 Bastian de Byl
+/* Copyright 2020 Bastian de Byl */
+#include <common.h>
 #include <libopencm3/stm32/fsmc.h>
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/rcc.h>
 #include <sdram.h>
-#include <stdint.h>
 
-static pin_definitions sdram_pins[6] = {
-    {RCC_GPIOB, GPIOB, GPIO5 | GPIO6},
-    {RCC_GPIOC, GPIOC, GPIO0},
-    {RCC_GPIOD, GPIOD,
-     GPIO0 | GPIO1 | GPIO8 | GPIO9 | GPIO10 | GPIO14 | GPIO15},
-    {RCC_GPIOE, GPIOE,
-     GPIO0 | GPIO1 | GPIO7 | GPIO8 | GPIO9 | GPIO10 | GPIO11 | GPIO12 | GPIO13 |
-         GPIO14 | GPIO15},
-    {RCC_GPIOF, GPIOF,
-     GPIO0 | GPIO1 | GPIO2 | GPIO3 | GPIO4 | GPIO5 | GPIO11 | GPIO12 | GPIO13 |
-         GPIO14 | GPIO15},
-    {RCC_GPIOG, GPIOG, GPIO0 | GPIO1 | GPIO4 | GPIO5 | GPIO8 | GPIO15}};
+static pin_def_t sdram_pins[] = {
+    {.rcc = RCC_GPIOB, .gpio = GPIOB, .pins = SDRAM_SDCKE1 | SDRAM_SDNE1},
+    {.rcc = RCC_GPIOC, .gpio = GPIOC, .pins = SDRAM_SDNEWE},
+    {.rcc = RCC_GPIOD,
+     .gpio = GPIOD,
+     .pins = SDRAM_D2 | SDRAM_D3 | SDRAM_D13 | SDRAM_D14 | SDRAM_D15 |
+             SDRAM_D0 | SDRAM_D1},
+    {.rcc = RCC_GPIOE,
+     .gpio = GPIOE,
+     .pins = SDRAM_NBL0 | SDRAM_NBL1 | SDRAM_D4 | SDRAM_D5 | SDRAM_D6 |
+             SDRAM_D7 | SDRAM_D8 | SDRAM_D9 | SDRAM_D10 | SDRAM_D11 |
+             SDRAM_D12},
+    {.rcc = RCC_GPIOF,
+     .gpio = GPIOF,
+     .pins = SDRAM_A0 | SDRAM_A1 | SDRAM_A2 | SDRAM_A3 | SDRAM_A4 | SDRAM_A5 |
+             SDRAM_SDNRAS | SDRAM_A6 | SDRAM_A7 | SDRAM_A8 | SDRAM_A9},
+    {.rcc = RCC_GPIOG,
+     .gpio = GPIOG,
+     .pins = SDRAM_A10 | SDRAM_A11 | SDRAM_A14 | SDRAM_INT2 | SDRAM_SDCLK |
+             SDRAM_SDNCAS},
+};
 
 static struct sdram_timing timing = {
     .trcd = SDRAM_TIMING_RCD,
@@ -29,20 +38,10 @@ static struct sdram_timing timing = {
 };
 
 void init_sdram() {
-    int i;
     /* control, timing registers */
     uint32_t cr_tmp, tr_tmp;
 
-    for (i = 0; i < 6; i++) {
-        rcc_periph_clock_enable(sdram_pins[i].rcc);
-        gpio_mode_setup(sdram_pins[i].gpio, GPIO_MODE_AF, GPIO_PUPD_NONE,
-                        sdram_pins[i].pins);
-
-        gpio_set_output_options(sdram_pins[i].gpio, GPIO_OTYPE_PP,
-                                GPIO_OSPEED_50MHZ, sdram_pins[i].pins);
-
-        gpio_set_af(sdram_pins[i].gpio, GPIO_AF12, sdram_pins[i].pins);
-    }
+    init_pin_defs(sdram_pins, GPIO_AF12);
 
     /* Enable the SDRAM Controller */
     rcc_periph_clock_enable(RCC_FSMC);
@@ -77,8 +76,10 @@ void init_sdram() {
      *	- Load the Mode Register
      */
     sdram_command(SDRAM_BANK2, SDRAM_CLK_CONF, 1, 0);
+
+    uint32_t i;
     for (i = 0; i < 0xFFFF; ++i) {
-        // sleep at least 100uS
+        /* sleep at least 100uS */
     }
 
     sdram_command(SDRAM_BANK2, SDRAM_PALL, 1, 0);

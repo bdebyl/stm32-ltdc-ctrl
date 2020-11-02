@@ -1,7 +1,8 @@
-#include "main.h"
-
+/* Copyright 2020 Bastian de Byl */
 #include <libopencm3/stm32/rcc.h>
+#include <main.h>
 
+#include "src/common.h"
 #include "src/ltdc.h"
 #include "src/sdram.h"
 
@@ -11,8 +12,9 @@ int main(void) {
     init_sdram();
     init_ltdc();
 
-    while (1)
-        ;
+    while (1) {
+        /* do nothing */
+    }
 
     return 0;
 }

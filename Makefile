@@ -1,4 +1,4 @@
-OBJS = main.o src/sdram.o src/ltdc.o
+OBJS = main.o src/sdram.o src/ltdc.o src/common.o
 
 OPENCM3_DIR := ./libopencm3
 
@@ -9,7 +9,7 @@ LDSCRIPT = stm32f4.ld #stm32f0.ld
 
 # Using the stm32f4 series chip
 LIBNAME     = opencm3_stm32f4
-DEFS        += -DSTM32F4 -I./src/
+DEFS        += -DSTM32F4 -I./src/ -I./
 
 # Target-specific flags
 FP_FLAGS    ?= -mfloat-abi=hard -mfpu=fpv4-sp-d16
