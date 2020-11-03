@@ -5,28 +5,6 @@
 #include <libopencm3/stm32/rcc.h>
 #include <sdram.h>
 
-static pin_def_t sdram_pins[] = {
-    {.rcc = RCC_GPIOB, .gpio = GPIOB, .pins = SDRAM_SDCKE1 | SDRAM_SDNE1},
-    {.rcc = RCC_GPIOC, .gpio = GPIOC, .pins = SDRAM_SDNEWE},
-    {.rcc = RCC_GPIOD,
-     .gpio = GPIOD,
-     .pins = SDRAM_D2 | SDRAM_D3 | SDRAM_D13 | SDRAM_D14 | SDRAM_D15 |
-             SDRAM_D0 | SDRAM_D1},
-    {.rcc = RCC_GPIOE,
-     .gpio = GPIOE,
-     .pins = SDRAM_NBL0 | SDRAM_NBL1 | SDRAM_D4 | SDRAM_D5 | SDRAM_D6 |
-             SDRAM_D7 | SDRAM_D8 | SDRAM_D9 | SDRAM_D10 | SDRAM_D11 |
-             SDRAM_D12},
-    {.rcc = RCC_GPIOF,
-     .gpio = GPIOF,
-     .pins = SDRAM_A0 | SDRAM_A1 | SDRAM_A2 | SDRAM_A3 | SDRAM_A4 | SDRAM_A5 |
-             SDRAM_SDNRAS | SDRAM_A6 | SDRAM_A7 | SDRAM_A8 | SDRAM_A9},
-    {.rcc = RCC_GPIOG,
-     .gpio = GPIOG,
-     .pins = SDRAM_A10 | SDRAM_A11 | SDRAM_A14 | SDRAM_INT2 | SDRAM_SDCLK |
-             SDRAM_SDNCAS},
-};
-
 static struct sdram_timing timing = {
     .trcd = SDRAM_TIMING_RCD,
     .trp = SDRAM_TIMING_RP,
@@ -37,11 +15,11 @@ static struct sdram_timing timing = {
     .tmrd = SDRAM_TIMING_MRD,
 };
 
-void init_sdram() {
+void init_sdram(pin_def_t* sdram_pin_defs) {
     /* control, timing registers */
     uint32_t cr_tmp, tr_tmp;
 
-    init_pin_defs(sdram_pins, GPIO_AF12);
+    init_pin_defs_af(sdram_pin_defs, GPIO_AF12);
 
     /* Enable the SDRAM Controller */
     rcc_periph_clock_enable(RCC_FSMC);

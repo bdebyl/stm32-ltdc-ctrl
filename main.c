@@ -4,7 +4,7 @@
 #include <main.h>
 #include <src/common.h>
 #include <src/ltdc.h>
-// #include <src/sdram.h>
+#include <src/sdram.h>
 
 static pin_def_t ltdc_pin_defs[] = {
     {.rcc = RCC_GPIOA,
@@ -22,10 +22,32 @@ static pin_def_t ltdc_pin_defs[] = {
      .pins = LCD_R7 | LCD_G3 | LCD_B3 | LCD_B4},
 };
 
+static pin_def_t sdram_pin_defs[] = {
+    {.rcc = RCC_GPIOB, .gpio = GPIOB, .pins = SDRAM_SDCKE1 | SDRAM_SDNE1},
+    {.rcc = RCC_GPIOC, .gpio = GPIOC, .pins = SDRAM_SDNEWE},
+    {.rcc = RCC_GPIOD,
+     .gpio = GPIOD,
+     .pins = SDRAM_D2 | SDRAM_D3 | SDRAM_D13 | SDRAM_D14 | SDRAM_D15 |
+             SDRAM_D0 | SDRAM_D1},
+    {.rcc = RCC_GPIOE,
+     .gpio = GPIOE,
+     .pins = SDRAM_NBL0 | SDRAM_NBL1 | SDRAM_D4 | SDRAM_D5 | SDRAM_D6 |
+             SDRAM_D7 | SDRAM_D8 | SDRAM_D9 | SDRAM_D10 | SDRAM_D11 |
+             SDRAM_D12},
+    {.rcc = RCC_GPIOF,
+     .gpio = GPIOF,
+     .pins = SDRAM_A0 | SDRAM_A1 | SDRAM_A2 | SDRAM_A3 | SDRAM_A4 | SDRAM_A5 |
+             SDRAM_SDNRAS | SDRAM_A6 | SDRAM_A7 | SDRAM_A8 | SDRAM_A9},
+    {.rcc = RCC_GPIOG,
+     .gpio = GPIOG,
+     .pins = SDRAM_A10 | SDRAM_A11 | SDRAM_A14 | SDRAM_INT2 | SDRAM_SDCLK |
+             SDRAM_SDNCAS},
+};
+
 int main(void) {
     rcc_clock_setup_pll(&rcc_hse_8mhz_3v3[RCC_CLOCK_3V3_168MHZ]);
 
-    /* init_sdram(); */
+    init_sdram(sdram_pin_defs);
     init_ltdc(ltdc_pin_defs);
 
     while (1) {
