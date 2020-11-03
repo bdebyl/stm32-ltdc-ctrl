@@ -3,8 +3,18 @@
 #include <libopencm3/stm32/rcc.h>
 #include <main.h>
 #include <src/common.h>
+#include <src/ili9341.h>
 #include <src/ltdc.h>
 #include <src/sdram.h>
+
+static pin_def_t ili9341_pin_defs[] = {
+    {RCC_GPIOC, GPIOC, ILI9341_CSX},
+    {RCC_GPIOD, GPIOD, ILI9341_RDX | ILI9341_WRX},
+};
+
+static pin_def_t ili9341_spi_pin_defs[] = {
+    {RCC_GPIOF, GPIOF, ILI9341_SCK | ILI9341_MISO | ILI9341_MOSI},
+};
 
 static pin_def_t ltdc_pin_defs[] = {
     {.rcc = RCC_GPIOA,
@@ -49,7 +59,7 @@ int main(void) {
 
     init_sdram(sdram_pin_defs);
     init_ltdc(ltdc_pin_defs);
-
+    init_ili9341(ili9341_pin_defs, ili9341_spi_pin_defs);
     while (1) {
         /* do nothing */
     }

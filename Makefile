@@ -1,4 +1,4 @@
-OBJS = main.o src/common.o src/ltdc.o src/sdram.o #$(patsubst %.c,%.o,$(wildcard src/*.c))
+OBJS = main.o $(patsubst %.c,%.o,$(wildcard src/*.c))
 
 OPENCM3_DIR := ./libopencm3
 
