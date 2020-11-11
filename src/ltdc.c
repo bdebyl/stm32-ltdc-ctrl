@@ -23,16 +23,20 @@ static void init_ltdc_rcc(void) {
     rcc_osc_on(RCC_PLLSAI);
     rcc_wait_for_osc_ready(RCC_PLLSAI);
 
-    while (!rcc_is_osc_ready(RCC_PLLSAI)) {
-        if ((RCC_CR & RCC_CR_PLLSAIRDY) == 0) continue;
-    }
+    /* while (!rcc_is_osc_ready(RCC_PLLSAI)) {
+     *     if ((RCC_CR & RCC_CR_PLLSAIRDY) == 0) break;
+     * } */
 
     rcc_periph_clock_enable(RCC_LTDC);
 }
 
 void init_ltdc(pin_def_t* ltdc_pin_defs) {
-    init_ltdc_rcc();
     init_pin_defs_af(ltdc_pin_defs, GPIO_AF14);
+    gpio_mode_setup(GPIOC, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO6);
+    gpio_set_af(GPIOC, GPIO_AF14, GPIO6);
+    gpio_set_output_options(GPIOC, GPIO_OTYPE_PP, GPIO_OSPEED_100MHZ, GPIO6);
+    rcc_periph_clock_enable(RCC_GPIOC);
+    init_ltdc_rcc();
 
     ltdc_ctrl_enable(LTDC_GCR_DEPOL | LTDC_GCR_HSPOL | LTDC_GCR_PCPOL);
 

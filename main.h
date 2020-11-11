@@ -94,5 +94,9 @@
 #define LCD_IM1 GPIO4
 #define LCD_IM2 GPIO5
 #define LCD_IM3 GPIO7
-
+/* LCD CONTROL */
+/* GPIOG */
+#define LCD_CLK GPIO7
+/* GPIOC */
+#define LCD_HSYNC GPIO6
 #endif /* MAIN_H_ */

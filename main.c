@@ -23,13 +23,13 @@ static pin_def_t ltdc_pin_defs[] = {
     {.rcc = RCC_GPIOB,
      .gpio = GPIOB,
      .pins = LCD_R3 | LCD_R6 | LCD_G4 | LCD_G5 | LCD_B7},
-    {.rcc = RCC_GPIOC, .gpio = GPIOC, .pins = LCD_R2 | LCD_G6},
+    {.rcc = RCC_GPIOC, .gpio = GPIOC, .pins = LCD_R2 | LCD_G6 | LCD_HSYNC},
     {.rcc = RCC_GPIOD,
      .gpio = GPIOD,
      .pins = LCD_G7 | LCD_B2 | LCD_IM0 | LCD_IM1 | LCD_IM2 | LCD_IM3},
     {.rcc = RCC_GPIOG,
      .gpio = GPIOG,
-     .pins = LCD_R7 | LCD_G3 | LCD_B3 | LCD_B4},
+     .pins = LCD_R7 | LCD_G3 | LCD_B3 | LCD_B4 | LCD_CLK},
 };
 
 static pin_def_t sdram_pin_defs[] = {
@@ -59,7 +59,8 @@ int main(void) {
 
     init_sdram(sdram_pin_defs);
     init_ltdc(ltdc_pin_defs);
-    init_ili9341(ili9341_pin_defs, ili9341_spi_pin_defs);
+    /* init_ili9341(ili9341_pin_defs, ili9341_spi_pin_defs); */
+
     while (1) {
         /* do nothing */
     }
