@@ -15,6 +15,6 @@
 #define SDRAM_TIMING_XSR 7 /* Exit Self Refresh Time */
 #define SDRAM_TIMING_MRD 2 /* Load to Active Delay */
 
-void init_sdram(pin_def_t *);
+void init_sdram(pin_def_t *, uint32_t);
 
 #endif /* SRC_SDRAM_H_ */

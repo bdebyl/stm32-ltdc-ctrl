@@ -57,8 +57,8 @@ static pin_def_t sdram_pin_defs[] = {
 int main(void) {
     rcc_clock_setup_pll(&rcc_hse_8mhz_3v3[RCC_CLOCK_3V3_168MHZ]);
 
-    init_sdram(sdram_pin_defs);
-    init_ltdc(ltdc_pin_defs);
+    init_sdram(sdram_pin_defs, 6);
+    init_ltdc(ltdc_pin_defs, 5);
     /* init_ili9341(ili9341_pin_defs, ili9341_spi_pin_defs); */
 
     while (1) {

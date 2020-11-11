@@ -30,12 +30,15 @@ static void init_ltdc_rcc(void) {
     rcc_periph_clock_enable(RCC_LTDC);
 }
 
-void init_ltdc(pin_def_t* ltdc_pin_defs) {
-    init_pin_defs_af(ltdc_pin_defs, GPIO_AF14);
-    gpio_mode_setup(GPIOC, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO6);
-    gpio_set_af(GPIOC, GPIO_AF14, GPIO6);
-    gpio_set_output_options(GPIOC, GPIO_OTYPE_PP, GPIO_OSPEED_100MHZ, GPIO6);
-    rcc_periph_clock_enable(RCC_GPIOC);
+void init_ltdc(pin_def_t* ltdc_pin_defs, uint32_t size) {
+    init_pin_defs_af(ltdc_pin_defs, GPIO_AF14, size);
+
+    /*     rcc_periph_clock_enable(RCC_GPIOC);
+     *     gpio_mode_setup(GPIOC, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO6);
+     *     gpio_set_af(GPIOC, GPIO_AF14, GPIO6);
+     *     gpio_set_output_options(GPIOC, GPIO_OTYPE_PP, GPIO_OSPEED_100MHZ,
+     * GPIO6);
+     *  */
     init_ltdc_rcc();
 
     ltdc_ctrl_enable(LTDC_GCR_DEPOL | LTDC_GCR_HSPOL | LTDC_GCR_PCPOL);

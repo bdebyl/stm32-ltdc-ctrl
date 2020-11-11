@@ -4,6 +4,6 @@
 
 #include <common.h>
 
-void init_ltdc(pin_def_t *);
+void init_ltdc(pin_def_t *, uint32_t);
 
 #endif /* SRC_LTDC_H_ */

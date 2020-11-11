@@ -15,11 +15,11 @@ static struct sdram_timing timing = {
     .tmrd = SDRAM_TIMING_MRD,
 };
 
-void init_sdram(pin_def_t* sdram_pin_defs) {
+void init_sdram(pin_def_t* sdram_pin_defs, uint32_t size) {
     /* control, timing registers */
     uint32_t cr_tmp, tr_tmp;
 
-    init_pin_defs_af(sdram_pin_defs, GPIO_AF12);
+    init_pin_defs_af(sdram_pin_defs, GPIO_AF12, size);
 
     /* Enable the SDRAM Controller */
     rcc_periph_clock_enable(RCC_FSMC);
