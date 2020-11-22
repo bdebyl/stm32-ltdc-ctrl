@@ -30,8 +30,8 @@ static void init_ltdc_rcc(void) {
     rcc_periph_clock_enable(RCC_LTDC);
 }
 
-void init_ltdc(pin_def_t* ltdc_pin_defs, uint32_t size) {
-    init_pin_defs_af(ltdc_pin_defs, GPIO_AF14, size);
+void init_ltdc(pin_def_t* pin_defs, uint8_t pin_defs_size) {
+    init_pin_defs_af(pin_defs, pin_defs_size, GPIO_AF14);
 
     /*     rcc_periph_clock_enable(RCC_GPIOC);
      *     gpio_mode_setup(GPIOC, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO6);

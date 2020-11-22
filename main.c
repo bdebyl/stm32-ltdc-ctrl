@@ -1,37 +1,42 @@
 /* Copyright 2020 Bastian de Byl */
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/rcc.h>
+#include <libopencm3/stm32/spi.h>
 #include <main.h>
 #include <src/common.h>
 #include <src/ili9341.h>
 #include <src/ltdc.h>
 #include <src/sdram.h>
 
-static pin_def_t ili9341_pin_defs[] = {
+/*  _ _ _ ___ _____ _  _
+ * (_) (_) _ \__ / | |/ |
+ * | | | \_, /|_ \_  _| |
+ * |_|_|_|/_/|___/ |_||_|
+ *                        */
+static ili_init_t ili9341_init = {
+    .spi_rcc = RCC_SPI1,
+    .spi_bus = SPI1,
+    .csx = ILI9341_CSX,
+    .rdx = ILI9341_RDX,
+    .wrx = ILI9341_WRX,
+};
+
+static pin_def_t ili_pin_defs[] = {
     {RCC_GPIOC, GPIOC, ILI9341_CSX},
     {RCC_GPIOD, GPIOD, ILI9341_RDX | ILI9341_WRX},
 };
+uint8_t ili_pin_defs_size = 2;
 
-static pin_def_t ili9341_spi_pin_defs[] = {
+static pin_def_t ili_spi_pin_defs[] = {
     {RCC_GPIOF, GPIOF, ILI9341_SCK | ILI9341_MISO | ILI9341_MOSI},
 };
+uint8_t ili_spi_pin_defs_size = 1;
 
-static pin_def_t ltdc_pin_defs[] = {
-    {.rcc = RCC_GPIOA,
-     .gpio = GPIOA,
-     .pins = LCD_R4 | LCD_R5 | LCD_G2 | LCD_B5},
-    {.rcc = RCC_GPIOB,
-     .gpio = GPIOB,
-     .pins = LCD_R3 | LCD_R6 | LCD_G4 | LCD_G5 | LCD_B7},
-    {.rcc = RCC_GPIOC, .gpio = GPIOC, .pins = LCD_R2 | LCD_G6 | LCD_HSYNC},
-    {.rcc = RCC_GPIOD,
-     .gpio = GPIOD,
-     .pins = LCD_G7 | LCD_B2 | LCD_IM0 | LCD_IM1 | LCD_IM2 | LCD_IM3},
-    {.rcc = RCC_GPIOG,
-     .gpio = GPIOG,
-     .pins = LCD_R7 | LCD_G3 | LCD_B3 | LCD_B4 | LCD_CLK},
-};
-
+/*         _
+ *  ___ __| |_ _ __ _ _ __
+ * (_-</ _` | '_/ _` | '  \
+ * /__/\__,_|_| \__,_|_|_|_|
+ *                           */
 static pin_def_t sdram_pin_defs[] = {
     {.rcc = RCC_GPIOB, .gpio = GPIOB, .pins = SDRAM_SDCKE1 | SDRAM_SDNE1},
     {.rcc = RCC_GPIOC, .gpio = GPIOC, .pins = SDRAM_SDNEWE},
@@ -53,13 +58,38 @@ static pin_def_t sdram_pin_defs[] = {
      .pins = SDRAM_A10 | SDRAM_A11 | SDRAM_A14 | SDRAM_INT2 | SDRAM_SDCLK |
              SDRAM_SDNCAS},
 };
+uint8_t sdram_pin_defs_size = 6;
+
+/*  _ _      _
+ * | | |_ __| |__
+ * | |  _/ _` / _|
+ * |_|\__\__,_\__|
+ *                 */
+static pin_def_t ltdc_pin_defs[] = {
+    {.rcc = RCC_GPIOA,
+     .gpio = GPIOA,
+     .pins = LCD_R4 | LCD_R5 | LCD_G2 | LCD_B5},
+    {.rcc = RCC_GPIOB,
+     .gpio = GPIOB,
+     .pins = LCD_R3 | LCD_R6 | LCD_G4 | LCD_G5 | LCD_B7},
+    {.rcc = RCC_GPIOC, .gpio = GPIOC, .pins = LCD_R2 | LCD_G6 | LCD_HSYNC},
+    {.rcc = RCC_GPIOD,
+     .gpio = GPIOD,
+     .pins = LCD_G7 | LCD_B2 | LCD_IM0 | LCD_IM1 | LCD_IM2 | LCD_IM3},
+    {.rcc = RCC_GPIOG,
+     .gpio = GPIOG,
+     .pins = LCD_R7 | LCD_G3 | LCD_B3 | LCD_B4 | LCD_CLK},
+};
+uint8_t ltdc_pin_defs_size = 5;
 
 int main(void) {
     rcc_clock_setup_pll(&rcc_hse_8mhz_3v3[RCC_CLOCK_3V3_168MHZ]);
 
-    init_sdram(sdram_pin_defs, 6);
-    init_ltdc(ltdc_pin_defs, 5);
-    /* init_ili9341(ili9341_pin_defs, ili9341_spi_pin_defs); */
+    init_sdram(sdram_pin_defs, sdram_pin_defs_size);
+    init_ltdc(ltdc_pin_defs, ltdc_pin_defs_size);
+
+    init_ili9341(ili_pin_defs, ili_pin_defs_size, ili_spi_pin_defs,
+                 ili_spi_pin_defs_size, &ili9341_init);
 
     while (1) {
         /* do nothing */
