@@ -16,8 +16,11 @@
 static ili_init_t ili9341_init = {
     .spi_rcc = RCC_SPI1,
     .spi_bus = SPI1,
+    .csx_gpio = GPIOF,
     .csx = ILI9341_CSX,
+    .rdx_gpio = GPIOF,
     .rdx = ILI9341_RDX,
+    .wrx_gpio = GPIOF,
     .wrx = ILI9341_WRX,
 };
 
