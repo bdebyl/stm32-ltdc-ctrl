@@ -14,13 +14,13 @@
  * |_|_|_|/_/|___/ |_||_|
  *                        */
 static ili_init_t ili9341_init = {
-    .spi_rcc = RCC_SPI1,
-    .spi_bus = SPI1,
-    .csx_gpio = GPIOF,
+    .spi_rcc = RCC_SPI5,
+    .spi_bus = SPI5,
+    .csx_gpio = GPIOC,
     .csx = ILI9341_CSX,
-    .rdx_gpio = GPIOF,
+    .rdx_gpio = GPIOD,
     .rdx = ILI9341_RDX,
-    .wrx_gpio = GPIOF,
+    .wrx_gpio = GPIOD,
     .wrx = ILI9341_WRX,
 };
 
@@ -71,7 +71,7 @@ uint8_t sdram_pin_defs_size = 6;
 static pin_def_t ltdc_pin_defs[] = {
     {.rcc = RCC_GPIOA,
      .gpio = GPIOA,
-     .pins = LCD_R4 | LCD_R5 | LCD_G2 | LCD_B5},
+     .pins = LCD_R4 | LCD_R5 | LCD_G2 | LCD_B5 | LCD_VSYNC},
     {.rcc = RCC_GPIOB,
      .gpio = GPIOB,
      .pins = LCD_R3 | LCD_R6 | LCD_G4 | LCD_G5 | LCD_B7},
@@ -94,8 +94,19 @@ int main(void) {
     init_ili9341(ili_pin_defs, ili_pin_defs_size, ili_spi_pin_defs,
                  ili_spi_pin_defs_size, &ili9341_init);
 
+    int i;
     while (1) {
         /* do nothing */
+        /* TESTING SPI:
+         * gpio_clear(ili9341_init.csx_gpio, ili9341_init.csx);
+         * spi_send(ili9341_init.spi_bus, 0x55);
+         * while (!(SPI_SR(ili9341_init.spi_bus) & SPI_SR_TXE))
+         *     ;
+         * while (SPI_SR(ili9341_init.spi_bus) & SPI_SR_BSY)
+         *     ;
+         * gpio_set(ili9341_init.csx_gpio, ili9341_init.csx);
+         * for (i = 0; i < 0xff; ++i)
+         *     ; */
     }
 
     return 0;

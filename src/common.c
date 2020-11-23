@@ -9,6 +9,8 @@ void init_pin_defs_c(pin_def_t* pin_defs, uint8_t pin_defs_size) {
         rcc_periph_clock_enable(pin_defs[i].rcc);
         gpio_mode_setup(pin_defs[i].gpio, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE,
                         pin_defs[i].pins);
+        gpio_set_output_options(pin_defs[i].gpio, GPIO_OTYPE_PP,
+                                GPIO_OSPEED_50MHZ, pin_defs[i].pins);
     }
 }
 

@@ -17,8 +17,8 @@
 #define ILI9341_RDX GPIO12 /* Read (low for command; high for data) */
 #define ILI9341_WRX GPIO13 /* Write Pin (low for command; high for data) */
 /* GPIOF */
-#define ILI9341_SCK GPIO7  /* SPI Clock */
-#define ILI9341_MISO GPIO8 /* SPI MISO */
+#define ILI9341_SCK GPIO7
+#define ILI9341_MISO GPIO8
 #define ILI9341_MOSI GPIO9
 
 /* FMC/SDRAM Defines */
@@ -95,6 +95,8 @@
 #define LCD_IM2 GPIO5
 #define LCD_IM3 GPIO7
 /* LCD CONTROL */
+/* GPIOA */
+#define LCD_VSYNC GPIO4
 /* GPIOG */
 #define LCD_CLK GPIO7
 /* GPIOC */

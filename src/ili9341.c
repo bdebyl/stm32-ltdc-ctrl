@@ -5,6 +5,13 @@
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/spi.h>
 
+static void _wait_for_spi(uint32_t spi) {
+    while (!(SPI_SR(spi) & SPI_SR_TXE))
+        ;
+    while (SPI_SR(spi) & SPI_SR_BSY)
+        ;
+}
+
 void wrx_cmd_ili9341(ili_init_t* ili_init, uint8_t ili_reg) {
     /* pull write (WRX) low for command */
     gpio_clear(ili_init->wrx_gpio, ili_init->wrx);
@@ -13,6 +20,7 @@ void wrx_cmd_ili9341(ili_init_t* ili_init, uint8_t ili_reg) {
     gpio_clear(ili_init->csx_gpio, ili_init->csx);
 
     spi_send(ili_init->spi_bus, ili_reg);
+    _wait_for_spi(ili_init->spi_bus);
 
     /* pull chip-select (CSX) high (disabled) */
     gpio_set(ili_init->csx_gpio, ili_init->csx);
@@ -26,6 +34,7 @@ void wrx_data_ili9341(ili_init_t* ili_init, uint8_t ili_data) {
     gpio_clear(ili_init->csx_gpio, ili_init->csx);
 
     spi_send(ili_init->spi_bus, ili_data);
+    _wait_for_spi(ili_init->spi_bus);
 
     /* pull chip-select (CSX) high (disabled) */
     gpio_set(ili_init->csx_gpio, ili_init->csx);
@@ -157,14 +166,21 @@ void init_ili9341(pin_def_t* ili_pin_defs, uint8_t size_defs,
                   ili_init_t* ili_init) {
     /* initialize the base GPIO */
     init_pin_defs_c(ili_pin_defs, size_defs);
+    gpio_set(ili_init->csx_gpio, ili_init->csx);
     init_pin_defs_af(ili_spi_pin_defs, size_spi_defs, GPIO_AF5);
 
     /* enable the SPI clock defined in the ili_init_t struct */
     rcc_periph_clock_enable(ili_init->spi_rcc);
-    spi_init_master(ili_init->spi_bus, SPI_CR1_BAUDRATE_FPCLK_DIV_256,
-                    SPI_CR1_CPOL_CLK_TO_0_WHEN_IDLE,
-                    SPI_CR1_CPHA_CLK_TRANSITION_1, SPI_CR1_DFF_8BIT,
+    /* Reset SPI, SPI_CR1 register cleared, SPI is disabled */
+    spi_reset(ili_init->spi_bus);
+
+    spi_init_master(ili_init->spi_bus, SPI_CR1_BAUDRATE_FPCLK_DIV_64,
+                    SPI_CR1_CPOL_CLK_TO_1_WHEN_IDLE,
+                    SPI_CR1_CPHA_CLK_TRANSITION_2, SPI_CR1_DFF_8BIT,
                     SPI_CR1_MSBFIRST);
+    spi_enable_software_slave_management(ili_init->spi_bus);
+    spi_set_nss_high(ili_init->spi_bus);
+
     spi_enable(ili_init->spi_bus);
 
     conf_ili9341(ili_init);
