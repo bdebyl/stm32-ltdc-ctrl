@@ -94,7 +94,7 @@ int main(void) {
     init_ili9341(ili_pin_defs, ili_pin_defs_size, ili_spi_pin_defs,
                  ili_spi_pin_defs_size, &ili9341_init);
 
-    int i;
+    /* int i; */
     while (1) {
         /* do nothing */
         /* TESTING SPI:

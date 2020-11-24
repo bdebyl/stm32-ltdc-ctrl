@@ -101,3 +101,7 @@ reset:
 .PHONY: clean
 clean:
 	$(RM) $(GENERATED_BINARIES) generated.* $(OBJS) $(OBJS:%.o=%.d)
+
+.PHONY: lint
+lint:
+	cpplint --filter=-whitespace/semicolon main.{c,h} src/*.{c,h}

@@ -4,6 +4,7 @@
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/spi.h>
+#include <sleeper.h>
 
 static void _wait_for_spi(uint32_t spi) {
     while (!(SPI_SR(spi) & SPI_SR_TXE))
@@ -41,10 +42,10 @@ void wrx_data_ili9341(ili_init_t* ili_init, uint8_t ili_data) {
 }
 
 static void conf_ili9341(ili_init_t* ili_init) {
-    wrx_cmd_ili9341(ili_init, 0xCA);
-    wrx_data_ili9341(ili_init, 0xC3);
-    wrx_data_ili9341(ili_init, 0x08);
-    wrx_data_ili9341(ili_init, 0x50);
+    /* wrx_cmd_ili9341(ili_init, 0xCA);
+     * wrx_data_ili9341(ili_init, 0xC3);
+     * wrx_data_ili9341(ili_init, 0x08);
+     * wrx_data_ili9341(ili_init, 0x50); */
     wrx_cmd_ili9341(ili_init, ILI_POWERB);
     wrx_data_ili9341(ili_init, 0x00);
     wrx_data_ili9341(ili_init, 0xC1);
@@ -114,12 +115,10 @@ static void conf_ili9341(ili_init_t* ili_init) {
     wrx_data_ili9341(ili_init, 0x06);
 
     wrx_cmd_ili9341(ili_init, ILI_GRAM);
-    /* TODO DELAY */
-    /* ILI_Delay(200); */
+    sleep_ms(200);
 
     wrx_cmd_ili9341(ili_init, ILI_GAMMA);
     wrx_data_ili9341(ili_init, 0x01);
-
     wrx_cmd_ili9341(ili_init, ILI_PGAMMA);
     wrx_data_ili9341(ili_init, 0x0F);
     wrx_data_ili9341(ili_init, 0x29);
@@ -154,8 +153,8 @@ static void conf_ili9341(ili_init_t* ili_init) {
     wrx_data_ili9341(ili_init, 0x0F);
 
     wrx_cmd_ili9341(ili_init, ILI_SLEEP_OUT);
-    /* TODO DELAY */
-    /* ILI_Delay(200); */
+    sleep_ms(200);
+
     wrx_cmd_ili9341(ili_init, ILI_DISPLAY_ON);
     /* GRAM start writing */
     wrx_cmd_ili9341(ili_init, ILI_GRAM);
@@ -183,5 +182,6 @@ void init_ili9341(pin_def_t* ili_pin_defs, uint8_t size_defs,
 
     spi_enable(ili_init->spi_bus);
 
+    sleep_enable();
     conf_ili9341(ili_init);
 }
