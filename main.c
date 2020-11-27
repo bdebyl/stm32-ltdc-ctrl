@@ -76,14 +76,12 @@ static pin_def_t ltdc_pin_defs[] = {
      .gpio = GPIOB,
      .pins = LCD_R3 | LCD_R6 | LCD_G4 | LCD_G5 | LCD_B7},
     {.rcc = RCC_GPIOC, .gpio = GPIOC, .pins = LCD_R2 | LCD_G6 | LCD_HSYNC},
-    {.rcc = RCC_GPIOD,
-     .gpio = GPIOD,
-     .pins = LCD_G7 | LCD_B2 | LCD_IM0 | LCD_IM1 | LCD_IM2 | LCD_IM3},
+    {.rcc = RCC_GPIOD, .gpio = GPIOD, .pins = LCD_G7 | LCD_B2},
     {.rcc = RCC_GPIOG,
      .gpio = GPIOG,
      .pins = LCD_R7 | LCD_G3 | LCD_B3 | LCD_B4 | LCD_CLK},
-};
-uint8_t ltdc_pin_defs_size = 5;
+    {.rcc = RCC_GPIOF, .gpio = GPIOF, .pins = LCD_DE}};
+uint8_t ltdc_pin_defs_size = 6;
 
 int main(void) {
     rcc_clock_setup_pll(&rcc_hse_8mhz_3v3[RCC_CLOCK_3V3_168MHZ]);

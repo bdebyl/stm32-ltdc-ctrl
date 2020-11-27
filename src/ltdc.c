@@ -5,6 +5,7 @@
 #include <libopencm3/stm32/ltdc.h>
 #include <libopencm3/stm32/rcc.h>
 #include <ltdc.h>
+#include <rome.h>
 #include <sdram.h>
 
 void lcd_tft_isr(void) {
@@ -13,22 +14,23 @@ void lcd_tft_isr(void) {
     LTDC_SRCR |= LTDC_SRCR_VBR;
 }
 
-static void init_ltdc_rcc(void) {
-    /* Timing:
-     *  Input Clock = (8MHz HSE) / PLLM (/8)
-     *  PLLSAI = N * Input Clock
-     *  PLLLCDCLK = (PLLSAI / R) / PLLSAIP
-     * note thate PLLSAIP is set in postscalers below
-     * for 6.5MHz: sain=130, sair=3, pllsaip=div4 */
+static void init_sdram_ltdc_color(void) {
+    int i;
+    for (i = 0; i < WIDTH * HEIGHT * BPP; i++) {
+        ((volatile uint8_t*)SDRAM_BASE_ADDRESS)[i] = 0x00;
+    }
+}
 
+static void init_ltdc_rcc(void) {
     uint32_t sain = 192; /* division factor for VCO */
     uint32_t saiq =
         (RCC_PLLSAICFGR >> RCC_PLLSAICFGR_PLLSAIQ_SHIFT) &
         RCC_PLLSAICFGR_PLLSAIQ_MASK; /* division factor for SAI1 clock */
     uint32_t sair = 4; /* division factor for LCD clock (valid: 2-7) */
-    rcc_pllsai_postscalers(10, 20);
+    /* rcc_pllsai_postscalers(10, 20); */
     rcc_pllsai_config(sain, 0, saiq, sair);
-    rcc_pllsai_postscalers(0, RCC_PLLSAICFGR_PLLSAIP_DIV8);
+    rcc_pllsai_postscalers(0, RCC_DCKCFGR_PLLSAIDIVR_DIVR_8);
+
     rcc_osc_on(RCC_PLLSAI);
     rcc_wait_for_osc_ready(RCC_PLLSAI);
 
@@ -53,23 +55,10 @@ void init_ltdc(pin_def_t* pin_defs, uint8_t pin_defs_size) {
      *  */
     init_ltdc_rcc();
 
-    ltdc_ctrl_enable(LTDC_GCR_DEPOL | LTDC_GCR_HSPOL | LTDC_GCR_PCPOL);
+    init_sdram_ltdc_color();
+    ltdc_ctrl_enable(LTDC_GCR_HSPOL_ACTIVE_LOW | LTDC_GCR_VSPOL_ACTIVE_LOW |
+                     LTDC_GCR_PCPOL_ACTIVE_HIGH | LTDC_GCR_DEPOL_ACTIVE_LOW);
 
-    /* Lol I don't know what these timings do yet */
-    /* ltdc_set_tft_sync_timings(320, 240, 10, 10, 323, 269, 10, 10); */
-
-    /* LTDC_SSCR */
-    uint16_t HSYNC = 10;
-    uint16_t VSYNC = 2;
-    /* LTDC_BPCR */
-    uint16_t HBP = 20;
-    uint16_t VBP = 2;
-    /* LTDC_AWCR */
-    uint16_t WIDTH = 240;
-    uint16_t HEIGHT = 320;
-    /* LTDC_TWCR */
-    uint16_t HFP = 10;
-    uint16_t VFP = 4;
     ltdc_set_tft_sync_timings(HSYNC, VSYNC, HBP, VBP, WIDTH, HEIGHT, HFP, VFP);
 
     ltdc_set_background_color(0x00, 0x00, 0x00); /* LTDC_BCCR */
@@ -83,29 +72,40 @@ void init_ltdc(pin_def_t* pin_defs, uint8_t pin_defs_size) {
 
     /* LAYER 1 */
     {
-        ltdc_setup_windowing(LTDC_LAYER_1, HBP, VBP, WIDTH,
-                             HEIGHT); /* LTDC_LxWHPCR */
+        /* Direct register manipulation as ltdc_setup_windowing is incorrect */
+        LTDC_L1WHPCR = (HBP + WIDTH + HSYNC - 1) << LTDC_LxWHPCR_WHSPPOS_SHIFT |
+                       (HSYNC + HBP) << LTDC_LxWHPCR_WHSTPOS_SHIFT;
+        LTDC_L1WVPCR = (VBP + HEIGHT + VSYNC - 1)
+                           << LTDC_LxWVPCR_WVSPPOS_SHIFT |
+                       (VBP + VSYNC) << LTDC_LxWVPCR_WVSTPOS_SHIFT;
 
         ltdc_set_pixel_format(LTDC_LAYER_1,
-                              LTDC_LxPFCR_RGB565); /* LTDC_LxPFCR */
+                              LTDC_LxPFCR_RGB888); /* LTDC_LxPFCR */
 
-        ltdc_set_fbuffer_address(
-            LTDC_LAYER_1, (uint32_t)SDRAM_BASE_ADDRESS); /* LTDC_LxCFBAR */
+        /* LTDC_LxCFBAR */
+        ltdc_set_fbuffer_address(LTDC_LAYER_1, (uint32_t)rome);
+        /* ltdc_set_fbuffer_address(LTDC_LAYER_1, (uint32_t)SDRAM_BASE_ADDRESS);
+         */
 
-        uint16_t pitch = WIDTH * sizeof(uint32_t);
-        uint16_t len = WIDTH * sizeof(uint32_t) + 3;
-        ltdc_set_fb_line_length(LTDC_LAYER_1, len, pitch); /* LTDC_LxCFBLR */
+        /* LTDC_L1CFBLR = (WIDTH * BPP) << LTDC_LxCFBLR_CFBP_SHIFT |
+         *                (WIDTH * BPP + 3) << LTDC_LxCFBLR_CFBLL_SHIFT; */
+        uint16_t len = WIDTH * BPP + 3;
+        uint16_t pitch = WIDTH * BPP;
+        /* LTDC_LxCFBLR */
+        ltdc_set_fb_line_length(LTDC_LAYER_1, len, pitch);
 
-        ltdc_set_fb_line_count(LTDC_LAYER_1, HEIGHT); /* LTDC_LxCFBLNR */
+        /* LTDC_LxCFBLNR */
+        ltdc_set_fb_line_count(LTDC_LAYER_1, HEIGHT);
 
-        ltdc_set_default_colors(LTDC_LAYER_1, 0xFF, 0x00, 0x00,
-                                0x00); /* LTDC_LxDCCR */
+        /* LTDC_LxDCCR */
+        ltdc_set_default_colors(LTDC_LAYER_1, 0xFF, 0x00, 0xFF, 0x00);
 
-        ltdc_set_constant_alpha(LTDC_LAYER_1, 0x000000FF); /* LTDC_LxCACR */
+        /* LTDC_LxCACR */
+        ltdc_set_constant_alpha(LTDC_LAYER_1, 0xFF);
 
-        uint8_t bf1 = LTDC_LxBFCR_BF1_CONST_ALPHA;
-        uint8_t bf2 = LTDC_LxBFCR_BF2_CONST_ALPHA;
-        ltdc_set_blending_factors(LTDC_LAYER_1, bf1, bf2);
+        /* LTDC_LxBFCR */
+        /* ltdc_set_blending_factors(LTDC_LAYER_1, LTDC_LxBFCR_BF1_CONST_ALPHA,
+         *                           LTDC_LxBFCR_BF2_CONST_ALPHA); */
 
         /* Dithering?
          * ltdc_set_color_key(uint32_t layer, uint8_t r, uint8_t g, uint8_t b);
@@ -115,8 +115,8 @@ void init_ltdc(pin_def_t* pin_defs, uint8_t pin_defs_size) {
     ltdc_layer_ctrl_enable(LTDC_LAYER_1,
                            LTDC_LxCR_LAYER_ENABLE); /* LTDC_LxCR */
 
-    /* Reload the shadow registers to active registers */
-    ltdc_reload(LTDC_SRCR_RELOAD_VBR); /* LTDC_SRCR */
+    /* Reload the immediate shadow registers to active registers */
+    ltdc_reload(LTDC_SRCR_RELOAD_IMR); /* LTDC_SRCR */
 
     ltdc_ctrl_enable(LTDC_GCR_LTDCEN); /* LTDC_GCR */
 }

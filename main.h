@@ -101,4 +101,6 @@
 #define LCD_CLK GPIO7
 /* GPIOC */
 #define LCD_HSYNC GPIO6
+/* GPIOF */
+#define LCD_DE GPIO10
 #endif /* MAIN_H_ */
