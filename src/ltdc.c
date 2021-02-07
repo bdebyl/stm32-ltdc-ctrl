@@ -1,11 +1,11 @@
 /* Copyright 2020 Bastian de Byl */
+#include <cimg.h>
 #include <common.h>
 #include <libopencm3/cm3/nvic.h>
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/ltdc.h>
 #include <libopencm3/stm32/rcc.h>
 #include <ltdc.h>
-#include <rome.h>
 #include <sdram.h>
 
 void lcd_tft_isr(void) {
@@ -83,7 +83,7 @@ void init_ltdc(pin_def_t* pin_defs, uint8_t pin_defs_size) {
                               LTDC_LxPFCR_RGB888); /* LTDC_LxPFCR */
 
         /* LTDC_LxCFBAR */
-        ltdc_set_fbuffer_address(LTDC_LAYER_1, (uint32_t)rome);
+        ltdc_set_fbuffer_address(LTDC_LAYER_1, (uint32_t)cimg);
         /* ltdc_set_fbuffer_address(LTDC_LAYER_1, (uint32_t)SDRAM_BASE_ADDRESS);
          */
 

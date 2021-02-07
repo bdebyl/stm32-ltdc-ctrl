@@ -1,15 +1,20 @@
 OBJS = main.o $(patsubst %.c,%.o,$(wildcard src/*.c))
+OBJS += $(patsubst %.c,%.o,$(wildcard lvgl/src/lv_core/*.c)) $(patsubst %.c,%.o,$(wildcard lvgl/src/lv_draw/*.c))
+OBJS += $(patsubst %.c,%.o,$(wildcard lvgl/src/lv_font/*.c)) $(patsubst %.c,%.o,$(wildcard lvgl/src/lv_gpu/*.c))
+OBJS += $(patsubst %.c,%.o,$(wildcard lvgl/src/lv_hal/*.c)) $(patsubst %.c,%.o,$(wildcard lvgl/src/lv_misc/*.c))
+OBJS += $(patsubst %.c,%.o,$(wildcard lvgl/src/lv_themes/*.c)) $(patsubst %.c,%.o,$(wildcard lvgl/src/lv_widgets/*.c))
 
 OPENCM3_DIR := ./libopencm3
+#/usr/arm-none-eabi
 
 # Our output name
 BINARY = main
 
-LDSCRIPT = stm32f4.ld #stm32f0.ld
+LDSCRIPT = stm32f4.ld
 
 # Using the stm32f4 series chip
 LIBNAME     = opencm3_stm32f4
-DEFS        += -DSTM32F4 -I./src/ -I./
+DEFS        += -DSTM32F4 -I./src/ -I./ -Ilvgl/
 
 # Target-specific flags
 FP_FLAGS    ?= -mfloat-abi=hard -mfpu=fpv4-sp-d16
@@ -38,7 +43,7 @@ CSTD        ?= -std=c99
 TGT_CFLAGS  += $(OPT) $(CSTD) $(DEBUG)
 TGT_CFLAGS  += $(ARCH_FLAGS)
 TGT_CFLAGS  += -Wextra -Wshadow -Wimplicit-function-declaration
-TGT_CFLAGS  += -Wredundant-decls -Wmissing-prototypes -Wstrict-prototypes
+TGT_CFLAGS  += -Wmissing-prototypes -Wstrict-prototypes
 TGT_CFLAGS  += -fno-common -ffunction-sections -fdata-sections
 
 # C preprocessor common flags
@@ -54,7 +59,7 @@ TGT_LDFLAGS     += -Wl,-Map=$(*).map -Wl,--cref
 TGT_LDFLAGS     += -Wl,--gc-sections
 
 # Used libraries
-DEFS        += -I$(OPENCM3_DIR)/include
+DEFS        += -I$(OPENCM3_DIR)/include -DLV_CONF_INCLUDE_SIMPLE
 LDFLAGS     += -L$(OPENCM3_DIR)/lib
 LDLIBS      += -l$(LIBNAME)
 LDLIBS      += -Wl,--start-group -lc -lgcc -lnosys -Wl,--end-group

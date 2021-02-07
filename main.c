@@ -2,11 +2,14 @@
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/spi.h>
+#include <lvgl/lvgl.h>
 #include <main.h>
 #include <src/common.h>
 #include <src/ili9341.h>
 #include <src/ltdc.h>
 #include <src/sdram.h>
+
+static lv_disp_drv_t disp_drv;
 
 /*  _ _ _ ___ _____ _  _
  * (_) (_) _ \__ / | |/ |
@@ -83,6 +86,24 @@ static pin_def_t ltdc_pin_defs[] = {
     {.rcc = RCC_GPIOF, .gpio = GPIOF, .pins = LCD_DE}};
 uint8_t ltdc_pin_defs_size = 6;
 
+static void set_pixel(uint32_t x, uint32_t y, lv_color_t color_p) {
+    // Set pixel at x, y to color_p from SDRAM_BASE_ADDRESS
+    /* color_p->full */
+}
+
+static void my_disp_flush(lv_disp_drv_t* disp, const lv_area_t* area,
+                          lv_color_t* color_p) {
+    int32_t x, y;
+    for (y = area->y1; y <= area->y2; y++) {
+        for (x = area->x1; x <= area->x2; x++) {
+            set_pixel(x, y, *color_p);
+            color_p++;
+        }
+    }
+
+    lv_disp_flush_ready(disp);
+}
+
 int main(void) {
     rcc_clock_setup_pll(&rcc_hse_8mhz_3v3[RCC_CLOCK_3V3_168MHZ]);
 
@@ -91,6 +112,18 @@ int main(void) {
 
     init_ili9341(ili_pin_defs, ili_pin_defs_size, ili_spi_pin_defs,
                  ili_spi_pin_defs_size, &ili9341_init);
+
+    lv_init();
+
+    static lv_disp_buf_t disp_buf;
+    static lv_color_t _buf[LV_HOR_RES_MAX * 10];
+
+    lv_disp_buf_init(&disp_buf, _buf, NULL, LV_HOR_RES_MAX * 10);
+    lv_disp_drv_init(&disp_drv);
+
+    disp_drv.flush_cb = my_disp_flush;
+    disp_drv.buffer = &_buf;
+    lv_disp_drv_register(&disp_drv);
 
     /* int i; */
     while (1) {
