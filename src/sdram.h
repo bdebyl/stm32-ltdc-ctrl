@@ -5,7 +5,7 @@
 #include <common.h>
 #include <stdint.h>
 
-#define SDRAM_BASE_ADDRESS ((uint8_t*)(0xd0000000))
+#define SDRAM_BASE_ADDRESS ((uint32_t)(0xd0000000))
 
 #define SDRAM_TIMING_RCD 2 /* RCD Delay */
 #define SDRAM_TIMING_RP 2  /* RP Delay */

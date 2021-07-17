@@ -19,5 +19,6 @@
 
 #define BPP 3
 void init_ltdc(pin_def_t* pin_defs, uint8_t pin_defs_size);
+void sdram_draw_color(void);
 
 #endif /* SRC_LTDC_H_ */

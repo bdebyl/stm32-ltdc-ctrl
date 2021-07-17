@@ -4,9 +4,15 @@
 #include <libopencm3/stm32/rcc.h>
 #include <sleeper.h>
 
+static void (*sleeper_cb)(void);
 volatile uint32_t SYS_MILLIS;
 
-void sys_tick_handler(void) { SYS_MILLIS++; }
+void sys_tick_handler(void) {
+    SYS_MILLIS++;
+    if (sleeper_cb) {
+        sleeper_cb();
+    }
+}
 
 void sleep_enable(void) {
     systick_set_reload(rcc_ahb_frequency / 1000 / 8);
@@ -24,3 +30,5 @@ void sleep_ms(uint32_t ms) {
     while (wait_for > SYS_MILLIS)
         ;
 }
+
+void set_sleep_cb(void (*func)(void)) { sleeper_cb = func; }

@@ -21,6 +21,13 @@ static void init_sdram_ltdc_color(void) {
     }
 }
 
+void sdram_draw_color(void) {
+    int i;
+    for (i = (WIDTH * HEIGHT * BPP) / 2; i < WIDTH * HEIGHT * BPP; i++) {
+        ((volatile uint8_t*)SDRAM_BASE_ADDRESS)[i] = 0xFF;
+    }
+}
+
 static void init_ltdc_rcc(void) {
     uint32_t sain = 192; /* division factor for VCO */
     uint32_t saiq =
@@ -80,12 +87,11 @@ void init_ltdc(pin_def_t* pin_defs, uint8_t pin_defs_size) {
                        (VBP + VSYNC) << LTDC_LxWVPCR_WVSTPOS_SHIFT;
 
         ltdc_set_pixel_format(LTDC_LAYER_1,
-                              LTDC_LxPFCR_RGB888); /* LTDC_LxPFCR */
+                              LTDC_LxPFCR_RGB565); /* LTDC_LxPFCR */
 
         /* LTDC_LxCFBAR */
-        ltdc_set_fbuffer_address(LTDC_LAYER_1, (uint32_t)cimg);
-        /* ltdc_set_fbuffer_address(LTDC_LAYER_1, (uint32_t)SDRAM_BASE_ADDRESS);
-         */
+        /* ltdc_set_fbuffer_address(LTDC_LAYER_1, (uint32_t)img); */
+        ltdc_set_fbuffer_address(LTDC_LAYER_1, (uint32_t)SDRAM_BASE_ADDRESS);
 
         /* LTDC_L1CFBLR = (WIDTH * BPP) << LTDC_LxCFBLR_CFBP_SHIFT |
          *                (WIDTH * BPP + 3) << LTDC_LxCFBLR_CFBLL_SHIFT; */
@@ -104,8 +110,8 @@ void init_ltdc(pin_def_t* pin_defs, uint8_t pin_defs_size) {
         ltdc_set_constant_alpha(LTDC_LAYER_1, 0xFF);
 
         /* LTDC_LxBFCR */
-        /* ltdc_set_blending_factors(LTDC_LAYER_1, LTDC_LxBFCR_BF1_CONST_ALPHA,
-         *                           LTDC_LxBFCR_BF2_CONST_ALPHA); */
+        ltdc_set_blending_factors(LTDC_LAYER_1, LTDC_LxBFCR_BF1_CONST_ALPHA,
+                                  LTDC_LxBFCR_BF2_CONST_ALPHA);
 
         /* Dithering?
          * ltdc_set_color_key(uint32_t layer, uint8_t r, uint8_t g, uint8_t b);

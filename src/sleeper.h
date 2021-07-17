@@ -6,5 +6,6 @@
 
 void sleep_enable(void);
 void sleep_ms(uint32_t ms);
+void set_sleep_cb(void (*)(void));
 
 #endif /* SRC_SLEEPER_H_ */

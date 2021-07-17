@@ -1,8 +1,9 @@
 OBJS = main.o $(patsubst %.c,%.o,$(wildcard src/*.c))
-OBJS += $(patsubst %.c,%.o,$(wildcard lvgl/src/lv_core/*.c)) $(patsubst %.c,%.o,$(wildcard lvgl/src/lv_draw/*.c))
-OBJS += $(patsubst %.c,%.o,$(wildcard lvgl/src/lv_font/*.c)) $(patsubst %.c,%.o,$(wildcard lvgl/src/lv_gpu/*.c))
-OBJS += $(patsubst %.c,%.o,$(wildcard lvgl/src/lv_hal/*.c)) $(patsubst %.c,%.o,$(wildcard lvgl/src/lv_misc/*.c))
-OBJS += $(patsubst %.c,%.o,$(wildcard lvgl/src/lv_themes/*.c)) $(patsubst %.c,%.o,$(wildcard lvgl/src/lv_widgets/*.c))
+OBJS += $(patsubst %.c,%.o,$(wildcard lvgl/src/core/*.c)) $(patsubst %.c,%.o,$(wildcard lvgl/src/draw/*.c))
+OBJS += $(patsubst %.c,%.o,$(wildcard lvgl/src/font/*.c)) $(patsubst %.c,%.o,$(wildcard lvgl/src/gpu/*.c))
+OBJS += $(patsubst %.c,%.o,$(wildcard lvgl/src/hal/*.c)) $(patsubst %.c,%.o,$(wildcard lvgl/src/misc/*.c))
+OBJS += $(patsubst %.c,%.o,$(wildcard lvgl/src/widgets/*.c)) $(patsubst %.c,%.o,$(wildcard lvgl/src/extra/*.c))
+OBJS += $(patsubst %.c,%.o,$(wildcard lvgl/src/extra/*/*/*.c))
 
 OPENCM3_DIR := ./libopencm3
 #/usr/arm-none-eabi
