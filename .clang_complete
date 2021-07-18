@@ -1,3 +1,4 @@
 -I./src
 -I../libopencm3/include
+-I./lvgl
 -DSTM32F4

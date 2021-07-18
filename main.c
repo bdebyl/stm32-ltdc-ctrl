@@ -95,7 +95,7 @@ static pin_def_t ltdc_pin_defs[] = {
      .pins = LCD_R4 | LCD_R5 | LCD_G2 | LCD_B5 | LCD_VSYNC},
     {.rcc = RCC_GPIOB,
      .gpio = GPIOB,
-     .pins = LCD_R3 | LCD_R6 | LCD_G4 | LCD_G5 | LCD_B7},
+     .pins = LCD_R3 | LCD_R6 | LCD_G4 | LCD_G5 | LCD_B7 | LCD_B6},
     {.rcc = RCC_GPIOC, .gpio = GPIOC, .pins = LCD_R2 | LCD_G6 | LCD_HSYNC},
     {.rcc = RCC_GPIOD, .gpio = GPIOD, .pins = LCD_G7 | LCD_B2},
     {.rcc = RCC_GPIOG,
