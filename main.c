@@ -2,6 +2,7 @@
 #include <libopencm3/cm3/nvic.h>
 #include <libopencm3/cm3/systick.h>
 #include <libopencm3/stm32/dma.h>
+#include <libopencm3/stm32/dma2d.h>
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/spi.h>
@@ -14,7 +15,7 @@
 #include <src/sdram.h>
 #include <src/sleeper.h>
 
-static volatile uint16_t* fb = (volatile uint16_t*)(SDRAM_BASE_ADDRESS);
+#define USE_DMA_MEM2MEM 1
 
 static int32_t x1_flush;
 static int32_t y1_flush;
@@ -25,6 +26,8 @@ static const lv_color_t* buf_to_flush;
 
 static lv_disp_drv_t disp_drv;
 static lv_disp_draw_buf_t disp_buf;
+
+static volatile uint16_t* fb = (volatile uint16_t*)(SDRAM_BASE_ADDRESS);
 
 /*  _ _ _ ___ _____ _  _
  * (_) (_) _ \__ / | |/ |
@@ -101,8 +104,12 @@ static pin_def_t ltdc_pin_defs[] = {
     {.rcc = RCC_GPIOF, .gpio = GPIOF, .pins = LCD_DE}};
 uint8_t ltdc_pin_defs_size = 6;
 
+#ifdef USE_DMA_MEM2MEM
 void dma2_stream0_isr(void) {
     if (dma_get_interrupt_flag(DMA2, DMA_STREAM0, DMA_TCIF)) {
+        gpio_set(GPIOG, GPIO13);
+        dma_disable_stream(DMA2, DMA_STREAM0);
+        dma_clear_interrupt_flags(DMA2, DMA_STREAM0, DMA_TCIF);
         y_fill_act++;
 
         if (y_fill_act > y2_fill) {
@@ -115,18 +122,19 @@ void dma2_stream0_isr(void) {
             dma_set_memory_address(
                 DMA2, DMA_STREAM0,
                 (uint32_t)&fb[y_fill_act * WIDTH + x1_flush]);
-            dma_set_number_of_data(DMA2, DMA_STREAM0, x2_flush - x1_flush + 1);
+            dma_set_number_of_data(DMA2, DMA_STREAM0,
+                                   (uint32_t)(x2_flush - x1_flush + 1));
             dma_enable_stream(DMA2, DMA_STREAM0);
         }
-        dma_clear_interrupt_flags(DMA2, DMA_STREAM0, DMA_TCIF);
     }
 }
-
+#else
 static void put_px(int32_t x, int32_t y, lv_color_t color_p) {
     uint16_t* px = (uint16_t*)(SDRAM_BASE_ADDRESS) + (y * WIDTH + x);
     uint16_t color = color_p.full;
     *px = color;
 }
+#endif
 
 static void my_disp_flush(lv_disp_drv_t* disp, const lv_area_t* area,
                           lv_color_t* color_p) {
@@ -139,7 +147,6 @@ static void my_disp_flush(lv_disp_drv_t* disp, const lv_area_t* area,
     int32_t act_y1 = area->y1 < 0 ? 0 : area->y1;
     int32_t act_x2 = area->x2 > WIDTH - 1 ? WIDTH - 1 : area->x2;
     int32_t act_y2 = area->y2 > HEIGHT - 1 ? HEIGHT - 1 : area->y2;
-    gpio_toggle(GPIOG, GPIO13);
 
     x1_flush = act_x1;
     y1_flush = act_y1;
@@ -148,11 +155,14 @@ static void my_disp_flush(lv_disp_drv_t* disp, const lv_area_t* area,
     y_fill_act = act_y1;
     buf_to_flush = color_p;
 
-    /* dma_set_peripheral_address(DMA2, DMA_STREAM0, (uint32_t)buf_to_flush); */
-    /* dma_set_memory_address(DMA2, DMA_STREAM0, */
-    /*                        (uint32_t)&fb[y_fill_act * WIDTH + x1_flush]); */
-    /* dma_set_number_of_data(DMA2, DMA_STREAM0, x2_flush - x1_flush + 1); */
-    /* dma_enable_stream(DMA2, DMA_STREAM0); */
+#ifdef USE_DMA_MEM2MEM
+    dma_set_peripheral_address(DMA2, DMA_STREAM0, (uint32_t)buf_to_flush);
+    dma_set_memory_address(DMA2, DMA_STREAM0,
+                           (uint32_t)&fb[y_fill_act * WIDTH + x1_flush]);
+    dma_set_number_of_data(DMA2, DMA_STREAM0,
+                           (uint32_t)(x2_flush - x1_flush + 1));
+    dma_enable_stream(DMA2, DMA_STREAM0);
+#else
     int32_t x, y;
     for (y = area->y1; y <= area->y2; y++) {
         for (x = area->x1; x <= area->x2; x++) {
@@ -161,31 +171,42 @@ static void my_disp_flush(lv_disp_drv_t* disp, const lv_area_t* area,
         }
     }
     lv_disp_flush_ready(disp);
+#endif
 }
 
+#ifdef USE_DMA_MEM2MEM
 // TODO(bastian): move this to header
 static void init_dma_mem2mem(void) {
     rcc_periph_clock_enable(RCC_DMA2);
+    rcc_periph_clock_enable(RCC_DMA2D);
     dma_stream_reset(DMA2, DMA_STREAM0);
-    dma_set_transfer_mode(DMA2, DMA_STREAM0, DMA_SxCR_DIR_MEM_TO_MEM);
-    dma_set_priority(DMA2, DMA_STREAM0, DMA_SxCR_PL_VERY_HIGH);
 
+    dma_enable_transfer_complete_interrupt(DMA2, DMA_STREAM0);
+    dma_enable_transfer_error_interrupt(DMA2, DMA_STREAM0);
+    dma_enable_direct_mode_error_interrupt(DMA2, DMA_STREAM0);
+    dma_enable_fifo_error_interrupt(DMA2, DMA_STREAM0);
+    nvic_enable_irq(NVIC_DMA2_STREAM0_IRQ);
+
+    dma_set_priority(DMA2, DMA_STREAM0, DMA_SxCR_PL_HIGH);
+    dma_set_memory_size(DMA2, DMA_STREAM0, DMA_SxCR_MSIZE_16BIT);
+    dma_set_peripheral_size(DMA2, DMA_STREAM0, DMA_SxCR_PSIZE_16BIT);
     dma_enable_memory_increment_mode(DMA2, DMA_STREAM0);
     dma_enable_peripheral_increment_mode(DMA2, DMA_STREAM0);
-    dma_set_peripheral_size(DMA2, DMA_STREAM0, DMA_SxCR_MSIZE_16BIT);
-    dma_set_memory_size(DMA2, DMA_STREAM0, DMA_SxCR_MSIZE_16BIT);
+    dma_set_transfer_mode(DMA2, DMA_STREAM0, DMA_SxCR_DIR_MEM_TO_MEM);
 
     dma_enable_fifo_mode(DMA2, DMA_STREAM0);
-    dma_set_fifo_threshold(DMA2, DMA_STREAM0, DMA_SxFCR_FTH_1_4_FULL);
     dma_set_memory_burst(DMA2, DMA_STREAM0, DMA_SxCR_MBURST_SINGLE);
     dma_set_peripheral_burst(DMA2, DMA_STREAM0, DMA_SxCR_PBURST_SINGLE);
+    dma_set_fifo_threshold(DMA2, DMA_STREAM0, DMA_SxFCR_FTH_1_4_FULL);
+
+    dma_set_peripheral_address(DMA2, DMA_STREAM0, (uint32_t)&buf_to_flush);
+    dma_set_memory_address(DMA2, DMA_STREAM0, (uint32_t)SDRAM_BASE_ADDRESS);
+    dma_set_initial_target(DMA2, DMA_STREAM0, 0);
     dma_enable_direct_mode(DMA2, DMA_STREAM0);
 
-    // define source as peripheral?
-    // dma_set_read_from_peripheral(...)
-    dma_enable_transfer_complete_interrupt(DMA2, DMA_STREAM0);
-    nvic_enable_irq(NVIC_DMA2_STREAM0_IRQ);
+    dma_channel_select(DMA2, DMA_STREAM0, DMA_SxCR_CHSEL_0);
 }
+#endif
 
 static volatile uint32_t t_saved = 0;
 static void monitor_cb(lv_disp_drv_t* d, uint32_t t, uint32_t p) {
@@ -206,7 +227,9 @@ int main(void) {
     init_ili9341(ili_pin_defs, ili_pin_defs_size, ili_spi_pin_defs,
                  ili_spi_pin_defs_size, &ili9341_init);
 
-    /* init_dma_mem2mem(); */
+#ifdef USE_DMA_MEM2MEM
+    init_dma_mem2mem();
+#endif
     lv_init();
 
     static lv_color_t _buf_a[WIDTH * 60];

@@ -80,11 +80,13 @@ void init_ltdc(pin_def_t* pin_defs, uint8_t pin_defs_size) {
     /* LAYER 1 */
     {
         /* Direct register manipulation as ltdc_setup_windowing is incorrect */
-        LTDC_L1WHPCR = (HBP + WIDTH + HSYNC - 1) << LTDC_LxWHPCR_WHSPPOS_SHIFT |
-                       (HSYNC + HBP) << LTDC_LxWHPCR_WHSTPOS_SHIFT;
-        LTDC_L1WVPCR = (VBP + HEIGHT + VSYNC - 1)
-                           << LTDC_LxWVPCR_WVSPPOS_SHIFT |
-                       (VBP + VSYNC) << LTDC_LxWVPCR_WVSTPOS_SHIFT;
+        /* LTDC_L1WHPCR = (HBP + WIDTH + HSYNC - 1) <<
+         * LTDC_LxWHPCR_WHSPPOS_SHIFT | (HSYNC + HBP) <<
+         * LTDC_LxWHPCR_WHSTPOS_SHIFT; LTDC_L1WVPCR = (VBP + HEIGHT + VSYNC - 1)
+         *                    << LTDC_LxWVPCR_WVSPPOS_SHIFT |
+         *                (VBP + VSYNC) << LTDC_LxWVPCR_WVSTPOS_SHIFT; */
+        ltdc_setup_windowing(LTDC_LAYER_1, HBP, VBP, HSYNC, VSYNC, WIDTH,
+                             HEIGHT);
 
         ltdc_set_pixel_format(LTDC_LAYER_1,
                               LTDC_LxPFCR_RGB565); /* LTDC_LxPFCR */

@@ -5,7 +5,7 @@ OBJS += $(patsubst %.c,%.o,$(wildcard lvgl/src/hal/*.c)) $(patsubst %.c,%.o,$(wi
 OBJS += $(patsubst %.c,%.o,$(wildcard lvgl/src/widgets/*.c)) $(patsubst %.c,%.o,$(wildcard lvgl/src/extra/*.c))
 OBJS += $(patsubst %.c,%.o,$(wildcard lvgl/src/extra/*/*/*.c))
 
-OPENCM3_DIR := ./libopencm3
+OPENCM3_DIR := ../libopencm3
 #/usr/arm-none-eabi
 
 # Our output name

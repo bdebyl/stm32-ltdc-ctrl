@@ -13,6 +13,8 @@
 /* LTDC_AWCR */
 #define WIDTH 240
 #define HEIGHT 320
+// #define WIDTH 320
+// #define HEIGHT 240
 /* LTDC_TWCR */
 #define HFP 10
 #define VFP 4
