@@ -15,8 +15,6 @@
 #include <src/sdram.h>
 #include <src/sleeper.h>
 
-#define USE_DMA_MEM2MEM 1
-
 static int32_t x1_flush;
 static int32_t y1_flush;
 static int32_t x2_flush;

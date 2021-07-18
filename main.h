@@ -14,6 +14,8 @@
 #define UNUSED(x) (void)(x)
 #endif
 
+#define USE_DMA_MEM2MEM 1
+
 /* (GPIO)A */
 #define LCD_B5       (GPIO3)
 #define LCD_VSYNC    (GPIO4)
