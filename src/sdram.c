@@ -71,6 +71,9 @@ void init_sdram(pin_def_t* pin_defs, uint8_t pin_defs_size) {
     /*
      * set the refresh counter to insure we kick off an
      * auto refresh often enough to prevent data loss.
+     *
+     * Formula: SDRAM Refresh Timer (SDRTR) = SDRAM Refresh Period / Number of
+     * Rows ex: TODO(bastian) explanation of this is missing!
      */
     FMC_SDRTR = 683;
     /* and Poof! a 8 megabytes of ram shows up in the address space */

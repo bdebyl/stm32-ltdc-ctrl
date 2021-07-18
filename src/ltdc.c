@@ -33,7 +33,6 @@ static void init_ltdc_rcc(void) {
         (RCC_PLLSAICFGR >> RCC_PLLSAICFGR_PLLSAIQ_SHIFT) &
         RCC_PLLSAICFGR_PLLSAIQ_MASK; /* division factor for SAI1 clock */
     uint32_t sair = 4; /* division factor for LCD clock (valid: 2-7) */
-    /* rcc_pllsai_postscalers(10, 20); */
     rcc_pllsai_config(sain, 0, saiq, sair);
     rcc_pllsai_postscalers(0, RCC_DCKCFGR_PLLSAIDIVR_DIVR_8);
 
@@ -43,9 +42,6 @@ static void init_ltdc_rcc(void) {
     while ((RCC_CR & RCC_CR_PLLSAIRDY) == 0) {
         continue;
     }
-    /* while (!rcc_is_osc_ready(rcc_pllsai)) {
-     *     if ((RCC_CR & RCC_CR_PLLSAIRDY) == 0) break;
-     * } */
 
     rcc_periph_clock_enable(RCC_LTDC);
 }
@@ -53,12 +49,6 @@ static void init_ltdc_rcc(void) {
 void init_ltdc(pin_def_t* pin_defs, uint8_t pin_defs_size) {
     init_pin_defs_af(pin_defs, pin_defs_size, GPIO_AF14);
 
-    /*     rcc_periph_clock_enable(RCC_GPIOC);
-     *     gpio_mode_setup(GPIOC, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO6);
-     *     gpio_set_af(GPIOC, GPIO_AF14, GPIO6);
-     *     gpio_set_output_options(GPIOC, GPIO_OTYPE_PP, GPIO_OSPEED_100MHZ,
-     * GPIO6);
-     *  */
     init_ltdc_rcc();
 
     init_sdram_ltdc_color();
@@ -78,12 +68,6 @@ void init_ltdc(pin_def_t* pin_defs, uint8_t pin_defs_size) {
 
     /* LAYER 1 */
     {
-        /* Direct register manipulation as ltdc_setup_windowing is incorrect */
-        /* LTDC_L1WHPCR = (HBP + WIDTH + HSYNC - 1) <<
-         * LTDC_LxWHPCR_WHSPPOS_SHIFT | (HSYNC + HBP) <<
-         * LTDC_LxWHPCR_WHSTPOS_SHIFT; LTDC_L1WVPCR = (VBP + HEIGHT + VSYNC - 1)
-         *                    << LTDC_LxWVPCR_WVSPPOS_SHIFT |
-         *                (VBP + VSYNC) << LTDC_LxWVPCR_WVSTPOS_SHIFT; */
         ltdc_setup_windowing(LTDC_LAYER_1, HBP, VBP, HSYNC, VSYNC, WIDTH,
                              HEIGHT);
 
