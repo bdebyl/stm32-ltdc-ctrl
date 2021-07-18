@@ -130,8 +130,9 @@ void dma2_stream0_isr(void) {
 }
 
 static void init_dma_mem2mem(void) {
+    /* RCC Enable DMA */
     rcc_periph_clock_enable(RCC_DMA2);
-    rcc_periph_clock_enable(RCC_DMA2D);
+    /* rcc_periph_clock_enable(RCC_DMA2D); */
 
     /* DMA Stream Reset */
     dma_stream_reset(DMA2, DMA_STREAM0);
@@ -199,6 +200,8 @@ static void my_disp_flush(lv_disp_drv_t* disp, const lv_area_t* area,
     dma_set_number_of_data(DMA2, DMA_STREAM0,
                            (uint32_t)(x2_flush - x1_flush + 1));
     dma_enable_stream(DMA2, DMA_STREAM0);
+
+    UNUSED(disp);
 #else
     int32_t x, y;
     for (y = area->y1; y <= area->y2; y++) {
@@ -214,6 +217,9 @@ static void my_disp_flush(lv_disp_drv_t* disp, const lv_area_t* area,
 static volatile uint32_t t_saved = 0;
 static void monitor_cb(lv_disp_drv_t* d, uint32_t t, uint32_t p) {
     t_saved = t;
+
+    UNUSED(d);
+    UNUSED(p);
 }
 
 static void lv_tick_cb(void) { lv_tick_inc(1); }

@@ -1,18 +1,21 @@
 CSRCS = main.c
 CSRCS += $(shell find -L src/ -name \*.c)
-CSRCS += $(shell find -L lvgl/src/core/ -name \*.c)
-CSRCS += $(shell find -L lvgl/src/draw/ -name \*.c)
-CSRCS += $(shell find -L lvgl/src/font/ -name \*.c)
-CSRCS += $(shell find -L lvgl/src/gpu/ -name \*.c)
-CSRCS += $(shell find -L lvgl/src/hal/ -name \*.c)
-CSRCS += $(shell find -L lvgl/src/misc/ -name \*.c)
-CSRCS += $(shell find -L lvgl/src/widgets/ -name \*.c)
-CSRCS += $(shell find -L lvgl/src/extra/ -name \*.c)
+
+LV_CSRCS += $(shell find -L lvgl/src/core/ -name \*.c)
+LV_CSRCS += $(shell find -L lvgl/src/draw/ -name \*.c)
+LV_CSRCS += $(shell find -L lvgl/src/font/ -name \*.c)
+LV_CSRCS += $(shell find -L lvgl/src/gpu/ -name \*.c)
+LV_CSRCS += $(shell find -L lvgl/src/hal/ -name \*.c)
+LV_CSRCS += $(shell find -L lvgl/src/misc/ -name \*.c)
+LV_CSRCS += $(shell find -L lvgl/src/widgets/ -name \*.c)
+LV_CSRCS += $(shell find -L lvgl/src/extra/ -name \*.c)
 
 OBJEXT ?= .o
-OBJS := $(CSRCS:.c=$(OBJEXT))
+OBJS = $(CSRCS:.c=$(OBJEXT))
+OBJS += $(LV_CSRCS:.c=$(OBJEXT))
 
 OPENCM3_DIR := ../libopencm3
+LV_CONF = ./lv_conf.h
 #/usr/arm-none-eabi
 
 # Our output name
@@ -87,20 +90,21 @@ map: $(BINARY).map
 
 GENERATED_BINARIES=$(BINARY).elf $(BINARY).bin $(BINARY).map
 
-%.o: %.c
+%.o: %.c $(LV_CONF)
 	@$(CC) $(TGT_CFLAGS) $(CFLAGS)  -o $(*).o -c $(*).c
 	@echo "CC $@"
 
 $(BINARY).bin: $(BINARY).elf
-	@$(OBJCOPY) -Obinary $(*).elf $(*).bin
+	@$(OBJCOPY) -Obinary $(BINARY).elf $(BINARY).bin
 	@echo "OBJCOPY $@"
 
-$(BINARY).elf $(BINARY).map: $(OBJS) $(LDSCRIPT)
-	@$(LD) $(TGT_LDFLAGS) $(LDFLAGS) $(OBJS) $(LDLIBS) -o $(*).elf
+$(BINARY).elf: $(OBJS) $(LDSCRIPT)
+	@$(LD) $(TGT_LDFLAGS) $(LDFLAGS) $(OBJS) $(LDLIBS) -o $(BINARY).elf
 	@echo "LD $@"
 
-$(BINARY).size: $(BINARY).bin
-	@$(SIZE) -d $(*).elf | tee $(*).size
+$(BINARY).size: $(BINARY).elf
+	@echo "SIZE $(BINARY)"
+	@$(SIZE) -d $(BINARY).elf | tee $(BINARY).size
 
 flash: $(BINARY).elf
 	@printf "  FLASH  $<\n"

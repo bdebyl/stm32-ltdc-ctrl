@@ -10,6 +10,10 @@
 #define STM32F4
 #endif
 
+#ifndef UNUSER
+#define UNUSED(x) (void)(x)
+#endif
+
 /* ILI9341 Defines */
 /* GPIOC */
 #define ILI9341_CSX GPIO2 /* Chip Select */
