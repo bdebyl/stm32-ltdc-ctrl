@@ -128,6 +128,43 @@ void dma2_stream0_isr(void) {
         }
     }
 }
+
+static void init_dma_mem2mem(void) {
+    rcc_periph_clock_enable(RCC_DMA2);
+    rcc_periph_clock_enable(RCC_DMA2D);
+
+    /* DMA Stream Reset */
+    dma_stream_reset(DMA2, DMA_STREAM0);
+
+    /* DMA Interrupts */
+    dma_enable_transfer_complete_interrupt(DMA2, DMA_STREAM0);
+    dma_enable_transfer_error_interrupt(DMA2, DMA_STREAM0);
+    dma_enable_direct_mode_error_interrupt(DMA2, DMA_STREAM0);
+    dma_enable_fifo_error_interrupt(DMA2, DMA_STREAM0);
+    nvic_enable_irq(NVIC_DMA2_STREAM0_IRQ);
+
+    /* DMA Mem-to-Mem Setup */
+    dma_enable_direct_mode(DMA2, DMA_STREAM0);
+    dma_enable_memory_increment_mode(DMA2, DMA_STREAM0);
+    dma_enable_peripheral_increment_mode(DMA2, DMA_STREAM0);
+    dma_set_memory_size(DMA2, DMA_STREAM0, DMA_SxCR_MSIZE_16BIT);
+    dma_set_peripheral_size(DMA2, DMA_STREAM0, DMA_SxCR_PSIZE_16BIT);
+    dma_set_priority(DMA2, DMA_STREAM0, DMA_SxCR_PL_HIGH);
+    dma_set_transfer_mode(DMA2, DMA_STREAM0, DMA_SxCR_DIR_MEM_TO_MEM);
+
+    /* DMA FIFO and Burst Mode */
+    dma_enable_fifo_mode(DMA2, DMA_STREAM0);
+    dma_set_fifo_threshold(DMA2, DMA_STREAM0, DMA_SxFCR_FTH_1_4_FULL);
+    dma_set_memory_burst(DMA2, DMA_STREAM0, DMA_SxCR_MBURST_SINGLE);
+    dma_set_peripheral_burst(DMA2, DMA_STREAM0, DMA_SxCR_PBURST_SINGLE);
+
+    /* DMA Set initial memory addresses */
+    dma_set_initial_target(DMA2, DMA_STREAM0, 0);
+    dma_set_peripheral_address(DMA2, DMA_STREAM0, (uint32_t)&buf_to_flush);
+    dma_set_memory_address(DMA2, DMA_STREAM0, (uint32_t)SDRAM_BASE_ADDRESS);
+
+    dma_channel_select(DMA2, DMA_STREAM0, DMA_SxCR_CHSEL_0);
+}
 #else
 static void put_px(int32_t x, int32_t y, lv_color_t color_p) {
     uint16_t* px = (uint16_t*)(SDRAM_BASE_ADDRESS) + (y * WIDTH + x);
@@ -143,6 +180,7 @@ static void my_disp_flush(lv_disp_drv_t* disp, const lv_area_t* area,
     if (area->x1 > WIDTH - 1) return;
     if (area->y1 > HEIGHT - 1) return;
 
+#ifdef USE_DMA_MEM2MEM
     int32_t act_x1 = area->x1 < 0 ? 0 : area->x1;
     int32_t act_y1 = area->y1 < 0 ? 0 : area->y1;
     int32_t act_x2 = area->x2 > WIDTH - 1 ? WIDTH - 1 : area->x2;
@@ -155,7 +193,6 @@ static void my_disp_flush(lv_disp_drv_t* disp, const lv_area_t* area,
     y_fill_act = act_y1;
     buf_to_flush = color_p;
 
-#ifdef USE_DMA_MEM2MEM
     dma_set_peripheral_address(DMA2, DMA_STREAM0, (uint32_t)buf_to_flush);
     dma_set_memory_address(DMA2, DMA_STREAM0,
                            (uint32_t)&fb[y_fill_act * WIDTH + x1_flush]);
@@ -173,40 +210,6 @@ static void my_disp_flush(lv_disp_drv_t* disp, const lv_area_t* area,
     lv_disp_flush_ready(disp);
 #endif
 }
-
-#ifdef USE_DMA_MEM2MEM
-// TODO(bastian): move this to header
-static void init_dma_mem2mem(void) {
-    rcc_periph_clock_enable(RCC_DMA2);
-    rcc_periph_clock_enable(RCC_DMA2D);
-    dma_stream_reset(DMA2, DMA_STREAM0);
-
-    dma_enable_transfer_complete_interrupt(DMA2, DMA_STREAM0);
-    dma_enable_transfer_error_interrupt(DMA2, DMA_STREAM0);
-    dma_enable_direct_mode_error_interrupt(DMA2, DMA_STREAM0);
-    dma_enable_fifo_error_interrupt(DMA2, DMA_STREAM0);
-    nvic_enable_irq(NVIC_DMA2_STREAM0_IRQ);
-
-    dma_set_priority(DMA2, DMA_STREAM0, DMA_SxCR_PL_HIGH);
-    dma_set_memory_size(DMA2, DMA_STREAM0, DMA_SxCR_MSIZE_16BIT);
-    dma_set_peripheral_size(DMA2, DMA_STREAM0, DMA_SxCR_PSIZE_16BIT);
-    dma_enable_memory_increment_mode(DMA2, DMA_STREAM0);
-    dma_enable_peripheral_increment_mode(DMA2, DMA_STREAM0);
-    dma_set_transfer_mode(DMA2, DMA_STREAM0, DMA_SxCR_DIR_MEM_TO_MEM);
-
-    dma_enable_fifo_mode(DMA2, DMA_STREAM0);
-    dma_set_memory_burst(DMA2, DMA_STREAM0, DMA_SxCR_MBURST_SINGLE);
-    dma_set_peripheral_burst(DMA2, DMA_STREAM0, DMA_SxCR_PBURST_SINGLE);
-    dma_set_fifo_threshold(DMA2, DMA_STREAM0, DMA_SxFCR_FTH_1_4_FULL);
-
-    dma_set_peripheral_address(DMA2, DMA_STREAM0, (uint32_t)&buf_to_flush);
-    dma_set_memory_address(DMA2, DMA_STREAM0, (uint32_t)SDRAM_BASE_ADDRESS);
-    dma_set_initial_target(DMA2, DMA_STREAM0, 0);
-    dma_enable_direct_mode(DMA2, DMA_STREAM0);
-
-    dma_channel_select(DMA2, DMA_STREAM0, DMA_SxCR_CHSEL_0);
-}
-#endif
 
 static volatile uint32_t t_saved = 0;
 static void monitor_cb(lv_disp_drv_t* d, uint32_t t, uint32_t p) {

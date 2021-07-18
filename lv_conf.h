@@ -204,11 +204,11 @@ e.g. "stm32f769xx.h" or "stm32f429xx.h"*/
  *-----------*/
 
 /*1: Show CPU usage and FPS count in the right bottom corner*/
-#define LV_USE_PERF_MONITOR 0
+#define LV_USE_PERF_MONITOR 1
 
 /*1: Show the used memory and the memory fragmentation  in the left bottom
  * corner Requires LV_MEM_CUSTOM = 0*/
-#define LV_USE_MEM_MONITOR 1
+#define LV_USE_MEM_MONITOR 0
 
 /*1: Draw random colored rectangles over the redrawn areas*/
 #define LV_USE_REFR_DEBUG 0
@@ -509,7 +509,7 @@ e.g. "stm32f769xx.h" or "stm32f429xx.h"*/
 #if LV_USE_THEME_DEFAULT
 
 /*0: Light mode; 1: Dark mode*/
-#define LV_THEME_DEFAULT_DARK 0
+#define LV_THEME_DEFAULT_DARK 1
 
 /*1: Enable grow on press*/
 #define LV_THEME_DEFAULT_GROW 1
